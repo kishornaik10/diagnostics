@@ -45,7 +45,7 @@ PLUGINLIB_EXPORT_CLASS(diagnostic_aggregator::GenericAnalyzer,
 
 GenericAnalyzer::GenericAnalyzer() { }
 
-bool GenericAnalyzer::init(const string base_path, const ros::NodeHandle &n)
+bool GenericAnalyzer::init(const string base_path, auto n)
 { 
   string nice_name;
   if (!n.getParam("path", nice_name))
@@ -86,7 +86,7 @@ bool GenericAnalyzer::init(const string base_path, const ros::NodeHandle &n)
     getParamVals(expected, expected_);
     for (unsigned int i = 0; i < expected_.size(); ++i)
     {
-      boost::shared_ptr<StatusItem> item(new StatusItem(expected_[i]));
+      std::shared_ptr<StatusItem> item(new StatusItem(expected_[i]));
       addItem(expected_[i], item);
     }
  }
@@ -101,10 +101,10 @@ bool GenericAnalyzer::init(const string base_path, const ros::NodeHandle &n)
     {
       try
       {
-        boost::regex re(regex_strs[i]);
+        std::regex re(regex_strs[i]);
         regex_.push_back(re);
       }
-      catch (boost::regex_error& e)
+      catch (std::regex_error& e)
       {
         ROS_ERROR("Attempted to make regex from %s. Caught exception, ignoring value. Exception: %s", 
                  regex_strs[i].c_str(), e.what());
@@ -149,10 +149,10 @@ GenericAnalyzer::~GenericAnalyzer() { }
 
 bool GenericAnalyzer::match(const string name)
 {
-  boost::cmatch what;
+  std::cmatch what;
   for (unsigned int i = 0; i < regex_.size(); ++i)
   {
-    if (boost::regex_match(name.c_str(), what, regex_[i]))
+    if (std::regex_match(name.c_str(), what, regex_[i]))
       return true;
   }
   
@@ -183,9 +183,9 @@ bool GenericAnalyzer::match(const string name)
   return false;
 }
 
-vector<boost::shared_ptr<diagnostic_msgs::DiagnosticStatus> > GenericAnalyzer::report()
+vector<std::shared_ptr<diagnostic_msgs::msg::DiagnosticStatus> > GenericAnalyzer::report()
 {
-  vector<boost::shared_ptr<diagnostic_msgs::DiagnosticStatus> > processed = GenericAnalyzerBase::report();
+  vector<std::shared_ptr<diagnostic_msgs::msg::DiagnosticStatus> > processed = GenericAnalyzerBase::report();
 
   // Check and make sure our expected names haven't been removed ...
   vector<string> expected_names_missing;
@@ -230,7 +230,7 @@ vector<boost::shared_ptr<diagnostic_msgs::DiagnosticStatus> > GenericAnalyzer::r
   // Add missing names to header ...
   for (unsigned int i = 0; i < expected_names_missing.size(); ++i)
   {
-    boost::shared_ptr<StatusItem> item(new StatusItem(expected_names_missing[i]));
+    std::shared_ptr<StatusItem> item(new StatusItem(expected_names_missing[i]));
     processed.push_back(item->toStatusMsg(path_, true));
   }
 
@@ -257,7 +257,7 @@ vector<boost::shared_ptr<diagnostic_msgs::DiagnosticStatus> > GenericAnalyzer::r
       // Add all missing items to header item
       for (unsigned int k = 0; k < expected_names_missing.size(); ++k)
       {
-        diagnostic_msgs::KeyValue kv;
+        diagnostic_msgs::msg::KeyValue kv;
         kv.key = expected_names_missing[k];
         kv.value = "Missing";
         processed[j]->values.push_back(kv);
